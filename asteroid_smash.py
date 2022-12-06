@@ -27,11 +27,88 @@ CYAN = (0, 255, 255)
 BLACK = (0, 0, 0)
 COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
-'''class SpaceShip(self):
-    def __init__(self):
-class Bullet(self):
-    sdjhg'''
+class Ball:
+    def __init__(self, screen: pygame.Surface, x=40, y=450):
+        """ Конструктор класса ball
+        Args:
+        x - начальное положение мяча по горизонтали
+        y - начальное положение мяча по вертикали
+        """
+        self.screen = screen
+        self.x = x
+        self.y = y
+        self.r = 10
+        self.vx = 0
+        self.vy = 0
+        self.color = choice(COLORS)
+        self.live = 45
 
+    def move(self):
+        """Переместить мяч по прошествии единицы времени.
+        Метод описывает перемещение мяча за один кадр перерисовки. То есть, обновляет значения
+        self.x и self.y с учетом скоростей self.vx и self.vy, силы гравитации, действующей на мяч,
+        и стен по краям окна (размер окна 800х600).
+        """
+
+        g = 0.7
+        k = 0.02
+        self.x += self.vx
+        self.y -= self.vy
+        self.vx -= k * self.vx
+        if (self.y >= HEIGHT-self.r - 1) or (self.y <= 10): self.vy = -self.vy
+        else:
+            self.vy -= g
+            self.vy -= k * self.vy
+        if (self.x >= WIDTH-self.r - 1) or (self.x <= 10): self.vx = -self.vx
+        self.live -= 1
+
+    def draw(self):
+        pygame.draw.circle(
+            self.screen,
+            self.color,
+            (self.x, self.y),
+            self.r
+        )
+
+
+class SpaceShip:
+    def __init__(self, screen):
+        self.screen = screen
+        self.f2_power = 10
+        self.f2_on = 0
+        self.an = 1
+        self.color = CYAN
+        self.x = 200
+        self.y = 450
+        self.width = 5
+
+    def fire2_start(self, event):
+        self.f2_on = 1
+
+    def fire2_end(self, event):
+        """Выстрел мячом.
+        Происходит при отпускании кнопки мыши.
+        Начальные значения компонент скорости мяча vx и vy зависят от положения мыши.
+        """
+        global balls, bullet
+        bullet += 1
+        new_ball = Ball(self.screen, x=self.x, y=self.y)
+        new_ball.r += 5
+        self.an = math.atan2((event.pos[1] - new_ball.y), (event.pos[0] - new_ball.x))
+        new_ball.vx = self.f2_power * math.cos(self.an)
+        new_ball.vy = - self.f2_power * math.sin(self.an)
+        balls.append(new_ball)
+        self.f2_on = 0
+        self.f2_power = 10
+
+    def draw(self):
+        x2 = self.x - self.width * math.sin(self.an)
+        y2 = self.y + self.width * math.cos(self.an)
+        x1 = self.x + math.cos(self.an) * self.f2_power
+        y1 = self.y + math.sin(self.an) * self.f2_power
+        x3 = x2 + math.cos(self.an) * self.f2_power
+        y3 = y2 + math.sin(self.an) * self.f2_power
+        pygame.draw.polygon(self.screen, self.color, ((self.x, self.y), (x1, y1), (x3, y3), (x2, y2)))
 
 class Asteroid:
     def __init__(self, screen: pygame.Surface):
