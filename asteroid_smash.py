@@ -30,6 +30,7 @@ COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 class SpaceShip(self):
     def __init__(self):
 class Bullet(self):
+sdjhg
 
 
 class Asteroid(self):
@@ -123,9 +124,6 @@ while not finished:
 
 print("Ваш счёт: ", score)
 
-pygame.quit()
-import pygame
-import math
-import random
+
 
 pygame.init()
