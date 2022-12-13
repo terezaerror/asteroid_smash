@@ -3,21 +3,17 @@ import pygame
 from pygame.draw import *
 from random import randint
 
-pygame.init()
-
 WIDTH = 1300
 HEIGHT = 700
 Rmin = 30
 Rmax = 60
-Vmin = 7
-Vmax = 10
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+Vmin = 2
+Vmax = 4
 FPS = 80
-n = 5 #количество кружков на экране
+n = 5
 background = pygame.image.load('background.jpg')
-background_rect = background.get_rect(
-    bottomright=(WIDTH, HEIGHT))
-
+background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+background_rect = background.get_rect()
 
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
@@ -27,6 +23,7 @@ MAGENTA = (255, 0, 255)
 CYAN = (0, 255, 255)
 BLACK = (0, 0, 0)
 COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
+
 
 class Ball:
     def __init__(self, screen: pygame.Surface, x=40, y=450):
@@ -41,7 +38,7 @@ class Ball:
         self.r = 10
         self.vx = 0
         self.vy = 0
-        self.color = choice(COLORS)
+        self.color = COLORS[randint(0, 5)]
         self.live = 45
 
     def move(self):
@@ -56,11 +53,12 @@ class Ball:
         self.x += self.vx
         self.y -= self.vy
         self.vx -= k * self.vx
-        if (self.y >= HEIGHT-self.r - 1) or (self.y <= 10): self.vy = -self.vy
+        if (self.y >= HEIGHT - self.r - 1) or (self.y <= 10):
+            self.vy = -self.vy
         else:
             self.vy -= g
             self.vy -= k * self.vy
-        if (self.x >= WIDTH-self.r - 1) or (self.x <= 10): self.vx = -self.vx
+        if (self.x >= WIDTH - self.r - 1) or (self.x <= 10): self.vx = -self.vx
         self.live -= 1
 
     def draw(self):
@@ -111,8 +109,9 @@ class SpaceShip:
         y3 = y2 + math.sin(self.an) * self.f2_power
         pygame.draw.polygon(self.screen, self.color, ((self.x, self.y), (x1, y1), (x3, y3), (x2, y2)))
 
+
 class Asteroid:
-    def __init__(self, screen: pygame.Surface):
+    def __init__(self, screen):
         self.screen = screen
         self.x = []
         self.y = []
@@ -120,26 +119,28 @@ class Asteroid:
         self.vx = []
         self.vy = []
         self.color = []
+        self.image = pygame.transform.scale(pygame.image.load('asteroid-1.png'), (50, 50))
+
     def create(self):
         for i in range(n):
-            self.x += [randint(Rmax, WIDTH-Rmax)]
+            self.x += [randint(Rmax, WIDTH - Rmax)]
             self.y += [randint(Rmax, HEIGHT - Rmax)]
             self.r += [randint(Rmin, Rmax)]
-            self.vx += [randint(Vmin, Vmax)*(2*randint(0, 1)-1)]
-            self.vy += [randint(Vmin, Vmax)*(2*randint(0, 1)-1)]
+            self.vx += [randint(Vmin, Vmax) * (2 * randint(0, 1) - 1)]
+            self.vy += [randint(Vmin, Vmax) * (2 * randint(0, 1) - 1)]
             self.color += [COLORS[randint(0, 5)]]
-            circle(screen, self.color[i], (self.x[i], self.y[i]), self.r[i])
+            circle(self.screen, self.color[i], (self.x[i], self.y[i]), self.r[i])
 
     def catch_check(self, event):
         '''п'''
         for i in range(n):
-            if (event.pos[0]-self.x[i])**2 + (event.pos[1]-self.y[i])**2 <= self.r[i]**2:
+            if (event.pos[0] - self.x[i]) ** 2 + (event.pos[1] - self.y[i]) ** 2 <= self.r[i] ** 2:
                 self.x.remove(self.x[i])
                 self.y.remove(self.y[i])
                 self.r.remove(self.r[i])
                 self.vx.remove(self.vx[i])
                 self.vy.remove(self.vy[i])
-                self.color.remove(self.self.color[i])
+                self.color.remove(self.color[i])
                 return True
         return False
 
@@ -151,7 +152,7 @@ class Asteroid:
         self.vx += [randint(Vmin, Vmax) * (2 * randint(0, 1) - 1)]
         self.vy += [randint(Vmin, Vmax) * (2 * randint(0, 1) - 1)]
         self.color += [COLORS[randint(0, 5)]]
-        circle(screen, self.color[n-1], (self.x[n-1], self.y[n-1]), self.r[n-1])
+        circle(self.screen, self.color[n - 1], (self.x[n - 1], self.y[n - 1]), self.r[n - 1])
 
     def move(self):
         '''с'''
@@ -162,7 +163,7 @@ class Asteroid:
     def wall_check(self):
         '''проверяет необходимость отскока и отражает скорости астероидов если нужно'''
         for i in range(n):
-            if min(WIDTH-self.x[i], self.x[i]) <= self.r[i]:
+            if min(WIDTH - self.x[i], self.x[i]) <= self.r[i]:
                 self.vx[i] = -self.vx[i]
             if min(HEIGHT - self.y[i], self.y[i]) <= self.r[i]:
                 self.vy[i] = -self.vy[i]
@@ -170,34 +171,40 @@ class Asteroid:
     def draw(self):
         '''в'''
         for i in range(n):
-            circle(screen, self.color[i], (self.x[i], self.y[i]), self.r[i])
+            circle(self.screen, self.color[i], (self.x[i], self.y[i]), self.r[i])
 
-score = 0
-asteroid = Asteroid(screen)
-shrift = pygame.font.SysFont('Times New Roman', 30)
-text_color = RED
-clock = pygame.time.Clock()
-finished = False
+def main():
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    score = 0
+    asteroid = Asteroid(screen)
+    #shrift = pygame.font.SysFont('Times New Roman', 30)
+    #text_color = RED
+    clock = pygame.time.Clock()
+    finished = False
+    pygame.init()
 
-asteroid.create()
-while not finished:
-    clock.tick(FPS)
-    screen.blit(background, background_rect)
-    asteroid.move()
-    asteroid.wall_check()
-    asteroid.draw()
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            finished = True
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            if asteroid.catch_check(event):
-                asteroid.new()
-                score += 1
-    pygame.display.update()
-    screen.fill(BLACK)
+    asteroid.create()
+    while not finished:
+        clock.tick(FPS)
+        screen.blit(background, background_rect)
+        screen.blit(asteroid.image, (0, 0))
+        asteroid.move()
+        asteroid.wall_check()
+        asteroid.draw()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                finished = True
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if asteroid.catch_check(event):
+                    asteroid.new()
+                    score += 1
+        pygame.display.update()
+        screen.fill(BLACK)
 
-print("Ваш счёт: ", score)
+    print("Game over: ", score)
+
+    pygame.init()
 
 
-
-pygame.init()
+if __name__ == '__main__':
+    main()
