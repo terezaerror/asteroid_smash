@@ -5,10 +5,6 @@ from random import choice
 
 WIDTH = 1300
 HEIGHT = 700
-Rmin = 30
-Rmax = 60
-Vmin = 2
-Vmax = 4
 FPS = 80
 
 background = pygame.image.load('background.jpg')
@@ -112,7 +108,11 @@ class SpaceShip:
 
 class Asteroid:
     def __init__(self, screen):
-        self.n = 20
+        self.n = 0
+        self.Rmin = 30
+        self.Rmax = 60
+        self.Vmin = 1
+        self.Vmax = 1
         self.screen = screen
         self.x = []
         self.y = []
@@ -122,22 +122,15 @@ class Asteroid:
         self.image = []
         self.image_1 = pygame.image.load('asteroid-1.png')
         self.image_2 = pygame.image.load('asteroid-2.png')
+        # self.image_3 = ...
+        # self.smash_image = ...
         self.choices = [self.image_1, self.image_2]
-
-    def create(self):
-        for i in range(self.n):
-            self.x += [randint(*choice([(WIDTH + Rmax, WIDTH + 100 + Rmax), (-Rmax - 100, -Rmax)]))]
-            self.y += [randint(*choice([(HEIGHT + Rmax, HEIGHT + 100 + Rmax), (-Rmax - 100, -Rmax)]))]
-            self.r += [randint(Rmin, Rmax)]
-            self.vx += [randint(Vmin, Vmax) * (2 * randint(0, 1) - 1)]
-            self.vy += [randint(Vmin, Vmax) * (2 * randint(0, 1) - 1)]
-            self.image += [choice(self.choices)]
-            self.screen.blit(pygame.transform.scale(self.image[i], (self.r[i] * 2, self.r[i] * 2)),
-                             (self.x[i] - self.r[i], self.y[i] - self.r[i]))
+        self.delay = 50
 
     def catch_check(self, event):
         for i in range(self.n):
             if (event.pos[0] - self.x[i]) ** 2 + (event.pos[1] - self.y[i]) ** 2 <= self.r[i] ** 2:
+                self.n -= 1
                 self.x.remove(self.x[i])
                 self.y.remove(self.y[i])
                 self.r.remove(self.r[i])
@@ -148,11 +141,12 @@ class Asteroid:
         return False
 
     def new(self):
-        self.x += [randint(*choice([(WIDTH + Rmax, WIDTH + 100 + Rmax), (-Rmax - 100, -Rmax)]))]
-        self.y += [randint(*choice([(HEIGHT + Rmax, HEIGHT + 100 + Rmax), (-Rmax - 100, -Rmax)]))]
-        self.r += [randint(Rmin, Rmax)]
-        self.vx += [randint(Vmin, Vmax) * (2 * randint(0, 1) - 1)]
-        self.vy += [randint(Vmin, Vmax) * (2 * randint(0, 1) - 1)]
+        self.n += 1
+        self.x += [randint(*choice([(WIDTH + self.Rmax, WIDTH + 100 + self.Rmax), (-self.Rmax - 100, -self.Rmax)]))]
+        self.y += [randint(*choice([(HEIGHT + self.Rmax, HEIGHT + 100 + self.Rmax), (-self.Rmax - 100, -self.Rmax)]))]
+        self.r += [randint(self.Rmin, self.Rmax)]
+        self.vx += [randint(self.Vmin, self.Vmax) * (2 * randint(0, 1) - 1)]
+        self.vy += [randint(self.Vmin, self.Vmax) * (2 * randint(0, 1) - 1)]
         self.image += [choice(self.choices)]
         self.screen.blit(pygame.transform.scale(self.image[self.n - 1],
                                                 (self.r[self.n - 1] * 2, self.r[self.n - 1] * 2)),
@@ -176,55 +170,46 @@ class Asteroid:
             if HEIGHT + 300 - self.y[i] <= self.r[i] or 200 + self.y[i] <= self.r[i]:
                 self.vy[i] = -self.vy[i]
 
-
-class Timer:
-    def __init__(self, delay, callback):
-        self.delay = delay
-        self.callback = callback
-
-    def tick(self):
-        self.delay -= 1
-        if self.delay == 0:
-            self.callback()
-            self.delay += 100
-
-
-def do_smth():
-    print("12345")
+    '''def smash(self):
+        self.screen.blit(pygame.transform.scale(self.image[i], (self.r[i] * 2, self.r[i] * 2)),
+                         (self.x[i] - self.r[i], self.y[i] - self.r[i]))'''
 
 
 def main():
+    pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     score = 0
     asteroid = Asteroid(screen)
-    # shrift = pygame.font.SysFont('Times New Roman', 30)
-    # text_color = RED
+    shrift = pygame.font.SysFont('Times New Roman', 30)
+    delay = asteroid.delay
     clock = pygame.time.Clock()
     finished = False
-    pygame.init()
-
-    asteroid.create()
-
-    timer = Timer(100, do_smth())
+    asteroid.new()
     while not finished:
         clock.tick(FPS)
         screen.blit(background, background_rect)
-        asteroid.move()
-        # timer.tick()
+        delay -= 1
+        if delay == 0:
+            score += 1
+            asteroid.new()
+            delay = asteroid.delay
         asteroid.wall_check()
+        asteroid.move()
         asteroid.draw()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 finished = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if asteroid.catch_check(event):
+                if asteroid.catch_check(event):  # if a bullet gets into an asteroid
+                    # asteroid.smash()
                     asteroid.new()
-                    score += 1
+                    score += 10
+        text = shrift.render("Ваш счёт: " + str(score), True, (255, 255, 255))
+        screen.blit(text, (1, 1))
         pygame.display.update()
         screen.fill(BLACK)
-
-    print("Game over: ", score)
-
+    print("Ваш счёт: ", score)
+    print(asteroid.n)
     pygame.init()
 
 
