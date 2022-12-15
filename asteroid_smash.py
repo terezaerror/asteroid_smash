@@ -1,7 +1,7 @@
 import math
 import pygame
-from pygame.draw import *
 from random import randint
+from random import choice
 
 WIDTH = 1300
 HEIGHT = 700
@@ -10,7 +10,7 @@ Rmax = 60
 Vmin = 2
 Vmax = 4
 FPS = 80
-n = 5
+
 background = pygame.image.load('background.jpg')
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 background_rect = background.get_rect()
@@ -112,83 +112,105 @@ class SpaceShip:
 
 class Asteroid:
     def __init__(self, screen):
+        self.n = 20
         self.screen = screen
         self.x = []
         self.y = []
         self.r = []
         self.vx = []
         self.vy = []
-        self.color = []
-        self.image = pygame.transform.scale(pygame.image.load('asteroid-1.png'), (50, 50))
+        self.image = []
+        self.image_1 = pygame.image.load('asteroid-1.png')
+        self.image_2 = pygame.image.load('asteroid-2.png')
+        self.choices = [self.image_1, self.image_2]
 
     def create(self):
-        for i in range(n):
-            self.x += [randint(Rmax, WIDTH - Rmax)]
-            self.y += [randint(Rmax, HEIGHT - Rmax)]
+        for i in range(self.n):
+            self.x += [randint(*choice([(WIDTH + Rmax, WIDTH + 100 + Rmax), (-Rmax - 100, -Rmax)]))]
+            self.y += [randint(*choice([(HEIGHT + Rmax, HEIGHT + 100 + Rmax), (-Rmax - 100, -Rmax)]))]
             self.r += [randint(Rmin, Rmax)]
             self.vx += [randint(Vmin, Vmax) * (2 * randint(0, 1) - 1)]
             self.vy += [randint(Vmin, Vmax) * (2 * randint(0, 1) - 1)]
-            self.color += [COLORS[randint(0, 5)]]
-            circle(self.screen, self.color[i], (self.x[i], self.y[i]), self.r[i])
+            self.image += [choice(self.choices)]
+            self.screen.blit(pygame.transform.scale(self.image[i], (self.r[i] * 2, self.r[i] * 2)),
+                             (self.x[i] - self.r[i], self.y[i] - self.r[i]))
 
     def catch_check(self, event):
-        '''п'''
-        for i in range(n):
+        for i in range(self.n):
             if (event.pos[0] - self.x[i]) ** 2 + (event.pos[1] - self.y[i]) ** 2 <= self.r[i] ** 2:
                 self.x.remove(self.x[i])
                 self.y.remove(self.y[i])
                 self.r.remove(self.r[i])
                 self.vx.remove(self.vx[i])
                 self.vy.remove(self.vy[i])
-                self.color.remove(self.color[i])
+                self.image.remove(self.image[i])
                 return True
         return False
 
     def new(self):
-        '''с'''
-        self.x += [randint(Rmax, WIDTH - Rmax)]
-        self.y += [randint(Rmax, HEIGHT - Rmax)]
+        self.x += [randint(*choice([(WIDTH + Rmax, WIDTH + 100 + Rmax), (-Rmax - 100, -Rmax)]))]
+        self.y += [randint(*choice([(HEIGHT + Rmax, HEIGHT + 100 + Rmax), (-Rmax - 100, -Rmax)]))]
         self.r += [randint(Rmin, Rmax)]
         self.vx += [randint(Vmin, Vmax) * (2 * randint(0, 1) - 1)]
         self.vy += [randint(Vmin, Vmax) * (2 * randint(0, 1) - 1)]
-        self.color += [COLORS[randint(0, 5)]]
-        circle(self.screen, self.color[n - 1], (self.x[n - 1], self.y[n - 1]), self.r[n - 1])
+        self.image += [choice(self.choices)]
+        self.screen.blit(pygame.transform.scale(self.image[self.n - 1],
+                                                (self.r[self.n - 1] * 2, self.r[self.n - 1] * 2)),
+                         (self.x[self.n - 1] - self.r[self.n - 1],
+                          self.y[self.n - 1] - self.r[self.n - 1]))
 
     def move(self):
-        '''с'''
-        for i in range(n):
+        for i in range(self.n):
             self.x[i] += self.vx[i]
             self.y[i] += self.vy[i]
 
+    def draw(self):
+        for i in range(self.n):
+            self.screen.blit(pygame.transform.scale(self.image[i], (self.r[i] * 2, self.r[i] * 2)),
+                             (self.x[i] - self.r[i], self.y[i] - self.r[i]))
+
     def wall_check(self):
-        '''проверяет необходимость отскока и отражает скорости астероидов если нужно'''
-        for i in range(n):
-            if min(WIDTH - self.x[i], self.x[i]) <= self.r[i]:
+        for i in range(self.n):
+            if WIDTH + 300 - self.x[i] <= self.r[i] or 200 + self.x[i] <= self.r[i]:
                 self.vx[i] = -self.vx[i]
-            if min(HEIGHT - self.y[i], self.y[i]) <= self.r[i]:
+            if HEIGHT + 300 - self.y[i] <= self.r[i] or 200 + self.y[i] <= self.r[i]:
                 self.vy[i] = -self.vy[i]
 
-    def draw(self):
-        '''в'''
-        for i in range(n):
-            circle(self.screen, self.color[i], (self.x[i], self.y[i]), self.r[i])
+
+class Timer:
+    def __init__(self, delay, callback):
+        self.delay = delay
+        self.callback = callback
+
+    def tick(self):
+        self.delay -= 1
+        if self.delay == 0:
+            self.callback()
+            self.delay += 100
+
+
+def do_smth():
+    print("12345")
+
 
 def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     score = 0
     asteroid = Asteroid(screen)
-    #shrift = pygame.font.SysFont('Times New Roman', 30)
-    #text_color = RED
+    # shrift = pygame.font.SysFont('Times New Roman', 30)
+    # text_color = RED
     clock = pygame.time.Clock()
     finished = False
     pygame.init()
 
     asteroid.create()
+
+    timer = Timer(100, do_smth())
     while not finished:
         clock.tick(FPS)
         screen.blit(background, background_rect)
-        screen.blit(asteroid.image, (0, 0))
         asteroid.move()
+        # timer.tick()
         asteroid.wall_check()
         asteroid.draw()
         for event in pygame.event.get():
