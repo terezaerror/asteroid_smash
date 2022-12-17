@@ -112,7 +112,7 @@ class Asteroid:
         self.Rmin = 30
         self.Rmax = 60
         self.Vmin = 1
-        self.Vmax = 5
+        self.Vmax = 7
         self.Wmax = 5
         self.screen = screen
         self.x = []
@@ -129,19 +129,19 @@ class Asteroid:
         # self.image_3 = ...
         # self.smash_image = ...
         self.choices = [self.image_1, self.image_2]
-        self.delay = 100
+        self.delay = 200
 
     def catch_check(self, event):
         for i in range(self.n):
             if (event.pos[0] - self.x[i]) ** 2 + (event.pos[1] - self.y[i]) ** 2 <= self.r[i] ** 2:
-                self.vx.remove(self.vx[i])
-                self.vy.remove(self.vy[i])
-                self.image.remove(self.image[i])
-                self.x.remove(self.x[i])
-                self.y.remove(self.y[i])
-                self.r.remove(self.r[i])
-                self.alpha.remove(self.alpha[i])
-                self.w.remove(self.w[i])
+                self.x.pop(i)
+                self.y.pop(i)
+                self.r.pop(i)
+                self.vx.pop(i)
+                self.vy.pop(i)
+                self.image.pop(i)
+                self.alpha.pop(i)
+                self.w.pop(i)
                 self.n -= 1
                 return True
         return False
@@ -172,11 +172,11 @@ class Asteroid:
 
     def wall_check(self):
         for i in range(self.n):
-            if (self.vx[i] > 0 and WIDTH + 200 - self.x[i] <= self.r[i]) or \
-                    (self.vx[i] < 0 and 200 + self.x[i] <= self.r[i]):
+            if (self.vx[i] > 0 and WIDTH + 300 - self.x[i] <= self.r[i]) or \
+                    (self.vx[i] < 0 and 300 + self.x[i] <= self.r[i]):
                 self.vx[i] = -self.vx[i]
-            if (self.vy[i] > 0 and HEIGHT + 200 - self.y[i] <= self.r[i]) or \
-                    (self.vy[i] < 0 and 200 + self.y[i] <= self.r[i]):
+            if (self.vy[i] > 0 and HEIGHT + 300 - self.y[i] <= self.r[i]) or \
+                    (self.vy[i] < 0 and 300 + self.y[i] <= self.r[i]):
                 self.vy[i] = -self.vy[i]
 
     '''def smash(self):
@@ -209,13 +209,9 @@ def main():
             if event.type == pygame.QUIT:
                 finished = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                print(asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.image)
                 if asteroid.catch_check(event):  # if a bullet gets into an asteroid
-                    print(asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.image)
                     # asteroid.smash()
                     asteroid.new()
-                    print(asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.image)
-                    print("\n")
                     score += 10
         text = shrift.render("Ваш счёт: " + str(score), True, (255, 255, 255))
         screen.blit(text, (1, 1))
