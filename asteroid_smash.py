@@ -112,7 +112,8 @@ class Asteroid:
         self.Rmin = 30
         self.Rmax = 60
         self.Vmin = 1
-        self.Vmax = 1
+        self.Vmax = 5
+        self.Wmax = 5
         self.screen = screen
         self.x = []
         self.y = []
@@ -120,54 +121,62 @@ class Asteroid:
         self.vx = []
         self.vy = []
         self.image = []
+        self.alpha = []
+        self.w = []
+        self.rect = []
         self.image_1 = pygame.image.load('asteroid-1.png')
         self.image_2 = pygame.image.load('asteroid-2.png')
         # self.image_3 = ...
         # self.smash_image = ...
         self.choices = [self.image_1, self.image_2]
-        self.delay = 50
+        self.delay = 100
 
     def catch_check(self, event):
         for i in range(self.n):
             if (event.pos[0] - self.x[i]) ** 2 + (event.pos[1] - self.y[i]) ** 2 <= self.r[i] ** 2:
-                self.n -= 1
-                self.x.remove(self.x[i])
-                self.y.remove(self.y[i])
-                self.r.remove(self.r[i])
                 self.vx.remove(self.vx[i])
                 self.vy.remove(self.vy[i])
                 self.image.remove(self.image[i])
+                self.x.remove(self.x[i])
+                self.y.remove(self.y[i])
+                self.r.remove(self.r[i])
+                self.alpha.remove(self.alpha[i])
+                self.w.remove(self.w[i])
+                self.n -= 1
                 return True
         return False
 
     def new(self):
         self.n += 1
-        self.x += [randint(*choice([(WIDTH + self.Rmax, WIDTH + 100 + self.Rmax), (-self.Rmax - 100, -self.Rmax)]))]
-        self.y += [randint(*choice([(HEIGHT + self.Rmax, HEIGHT + 100 + self.Rmax), (-self.Rmax - 100, -self.Rmax)]))]
-        self.r += [randint(self.Rmin, self.Rmax)]
-        self.vx += [randint(self.Vmin, self.Vmax) * (2 * randint(0, 1) - 1)]
-        self.vy += [randint(self.Vmin, self.Vmax) * (2 * randint(0, 1) - 1)]
-        self.image += [choice(self.choices)]
-        self.screen.blit(pygame.transform.scale(self.image[self.n - 1],
-                                                (self.r[self.n - 1] * 2, self.r[self.n - 1] * 2)),
-                         (self.x[self.n - 1] - self.r[self.n - 1],
-                          self.y[self.n - 1] - self.r[self.n - 1]))
+        self.x.append(randint(*choice([(WIDTH + self.Rmax, WIDTH + 100 + self.Rmax),
+                                       (-self.Rmax - 100, -self.Rmax)])))
+        self.y.append(randint(*choice([(HEIGHT + self.Rmax, HEIGHT + 100 + self.Rmax),
+                                       (-self.Rmax - 100, -self.Rmax)])))
+        self.r.append(randint(self.Rmin, self.Rmax))
+        self.vx.append(randint(*choice([(-self.Vmax, -self.Vmin), (self.Vmin, self.Vmax)])))
+        self.vy.append(randint(*choice([(-self.Vmax, -self.Vmin), (self.Vmin, self.Vmax)])))
+        self.image.append(choice(self.choices))
+        self.alpha.append(0)
+        self.w.append(randint(*choice([(-self.Wmax, -1), (1, self.Wmax)])))
 
-    def move(self):
+    def move_and_draw(self):
         for i in range(self.n):
             self.x[i] += self.vx[i]
             self.y[i] += self.vy[i]
-
-    def draw(self):
-        for i in range(self.n):
-            self.screen.blit(pygame.transform.scale(self.image[i], (self.r[i] * 2, self.r[i] * 2)),
-                             (self.x[i] - self.r[i], self.y[i] - self.r[i]))
+            self.alpha[i] += self.w[i]
+            self.screen.blit(pygame.transform.rotate(
+                pygame.transform.scale(self.image[i], (self.r[i] * 2, self.r[i] * 2)), self.alpha[i]),
+                pygame.transform.rotate(pygame.transform.scale(
+                    self.image[i], (self.r[i] * 2, self.r[i] * 2)),
+                    self.alpha[i]).get_rect(center=(self.x[i], self.y[i])))
 
     def wall_check(self):
         for i in range(self.n):
-            if WIDTH + 300 - self.x[i] <= self.r[i] or 200 + self.x[i] <= self.r[i]:
+            if (self.vx[i] > 0 and WIDTH + 200 - self.x[i] <= self.r[i]) or \
+                    (self.vx[i] < 0 and 200 + self.x[i] <= self.r[i]):
                 self.vx[i] = -self.vx[i]
-            if HEIGHT + 300 - self.y[i] <= self.r[i] or 200 + self.y[i] <= self.r[i]:
+            if (self.vy[i] > 0 and HEIGHT + 200 - self.y[i] <= self.r[i]) or \
+                    (self.vy[i] < 0 and 200 + self.y[i] <= self.r[i]):
                 self.vy[i] = -self.vy[i]
 
     '''def smash(self):
@@ -178,13 +187,14 @@ class Asteroid:
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    score = 0
+    score = 1
     asteroid = Asteroid(screen)
     shrift = pygame.font.SysFont('Times New Roman', 30)
     delay = asteroid.delay
     clock = pygame.time.Clock()
     finished = False
     asteroid.new()
+    print(asteroid.x, asteroid.y, asteroid.r, asteroid.image, asteroid.vx, asteroid.vy)
     while not finished:
         clock.tick(FPS)
         screen.blit(background, background_rect)
@@ -194,22 +204,24 @@ def main():
             asteroid.new()
             delay = asteroid.delay
         asteroid.wall_check()
-        asteroid.move()
-        asteroid.draw()
+        asteroid.move_and_draw()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 finished = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
+                print(asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.image)
                 if asteroid.catch_check(event):  # if a bullet gets into an asteroid
+                    print(asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.image)
                     # asteroid.smash()
                     asteroid.new()
+                    print(asteroid.x, asteroid.y, asteroid.vx, asteroid.vy, asteroid.image)
+                    print("\n")
                     score += 10
         text = shrift.render("Ваш счёт: " + str(score), True, (255, 255, 255))
         screen.blit(text, (1, 1))
         pygame.display.update()
         screen.fill(BLACK)
     print("Ваш счёт: ", score)
-    print(asteroid.n)
     pygame.init()
 
 
