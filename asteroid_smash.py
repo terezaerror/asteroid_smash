@@ -34,9 +34,9 @@ class Ball:
         self.r = []
         self.r0 = 5
         self.angle = []
-        self.v0 = 10
+        self.v0 = 20
         self.color = WHITE
-        self.delay = 5
+        self.delay = 4
 
     def new(self, obj):
         self.n += 1
@@ -70,8 +70,8 @@ class SpaceShip:
     def __init__(self, screen):
         self.screen = screen
         self.image = pygame.image.load('spaceship.png')
-        self.x = 200
-        self.y = 450
+        self.x = WIDTH / 2
+        self.y = HEIGHT / 2
         self.r = 30
         self.speed = 8
         self.angle = 0
@@ -209,7 +209,7 @@ class Energy:
 
     def charge(self):
         if self.fuel > 0:
-            self.fuel -= 20
+            self.fuel -= 15
             return True
         else:
             self.delay = True
@@ -264,8 +264,6 @@ def main():
         ball.wall_check()
         ball.move_and_draw()
 
-        print(ball.x, ball.y, ball.angle)
-
         delay1 -= 1
         if delay1 == 0:
             score += 1
@@ -281,7 +279,7 @@ def main():
             spaceship.move()
         elif keys[pygame.K_DOWN]:
             spaceship.move_back()
-        elif keys[pygame.K_SPACE]:
+        if keys[pygame.K_SPACE]:
             delay2 -= 1
             if delay2 <= 0 and not energy.delay:
                 score += 1
@@ -296,18 +294,18 @@ def main():
         screen.fill(BLACK)
 
         if asteroid.crash_check(spaceship):
-            text = shrift.render("Ваш счёт: " + str(score), True, (255, 255, 255))
-            text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-            ending_text = ending_shrift.render("Game over", True, (255, 0, 0))
-            ending_text_rect = ending_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-            screen.blit(ending_text, ending_text_rect)
-            pygame.display.update()
-            clock.tick(1)
-            screen.fill(BLACK)
-            screen.blit(text, text_rect)
-            pygame.display.update()
-            clock.tick(1)
-            finished = True
+            while not finished:
+                text = shrift.render("Ваш счёт: " + str(score), True, (255, 255, 255))
+                text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+                ending_text = ending_shrift.render("Game over", True, (255, 0, 0))
+                ending_text_rect = ending_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+                screen.blit(ending_text, ending_text_rect)
+                screen.blit(text, text_rect)
+                pygame.display.update()
+                screen.fill(BLACK)
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        finished = True
 
     print("Ваш счёт: ", score)
     pygame.init()
