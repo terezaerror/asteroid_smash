@@ -1,11 +1,12 @@
 import math
 import pygame
+from pygame.draw import *
 from random import randint
 from random import choice
 
 WIDTH = 1300
 HEIGHT = 700
-FPS = 60
+FPS = 2
 
 background = pygame.image.load('background-1.jpg')
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
@@ -22,49 +23,35 @@ COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
 
 class Ball:
-    def __init__(self, screen: pygame.Surface, x=40, y=450):
-        """ Конструктор класса ball
-        Args:
-        x - начальное положение мяча по горизонтали
-        y - начальное положение мяча по вертикали
-        """
+    def __init__(self, screen):
         self.screen = screen
-        self.x = x
-        self.y = y
-        self.r = 10
-        self.vx = 0
-        self.vy = 0
-        self.color = COLORS[randint(0, 5)]
-        self.live = 45
+        self.n = 0
+        self.x = []
+        self.y = []
+        self.angle = []
+        self.r0 = 5
+        self.v0 = 10
+        self.color = (255, 255, 255)
 
-    def move(self):
-        """Переместить мяч по прошествии единицы времени.
-        Метод описывает перемещение мяча за один кадр перерисовки. То есть, обновляет значения
-        self.x и self.y с учетом скоростей self.vx и self.vy, силы гравитации, действующей на мяч,
-        и стен по краям окна (размер окна 800х600).
-        """
+    def new(self, obj):
+        self.n += 1
+        self.x.append(obj.x)
+        self.y.append(obj.y)
+        self.angle.append(obj.angle)
 
-        g = 0.7
-        k = 0.02
-        self.x += self.vx
-        self.y -= self.vy
-        self.vx -= k * self.vx
-        if (self.y >= HEIGHT - self.r - 1) or (self.y <= 10):
-            self.vy = -self.vy
-        else:
-            self.vy -= g
-            self.vy -= k * self.vy
-        if (self.x >= WIDTH - self.r - 1) or (self.x <= 10):
-            self.vx = -self.vx
-        self.live -= 1
+    def move_and_draw(self):
+        for i in range(self.n):
+            self.x[i] += self.v0 * math.sin(-math.radians(self.angle[i]))
+            self.y[i] -= self.v0 * math.cos(math.radians(self.angle[i]))
+            circle(self.screen, self.color, (self.x[i], self.y[i]), self.r0)
 
-    def draw(self):
-        pygame.draw.circle(
-            self.screen,
-            self.color,
-            (self.x, self.y),
-            self.r
-        )
+    def wall_check(self):
+        for i in range(self.n):
+            if self.y[i] >= HEIGHT + 100 or self.y[i] <= - 100 or self.x[i] >= WIDTH + 100 or self.x[i] <= - 100:
+                self.x.pop(i)
+                self.y.pop(i)
+                self.angle.pop(i)
+                self.n -= 1
 
 
 class SpaceShip:
@@ -82,25 +69,6 @@ class SpaceShip:
         self.an = 1
         self.color = CYAN
         self.width = 5
-
-    def fire2_start(self, event):
-        self.f2_on = 1
-
-    def fire2_end(self, event):
-        """Выстрел мячом.
-        Происходит при отпускании кнопки мыши.
-        Начальные значения компонент скорости мяча vx и vy зависят от положения мыши.
-        """
-        global balls, bullet
-        bullet += 1
-        new_ball = Ball(self.screen, x=self.x, y=self.y)
-        new_ball.r += 5
-        self.an = math.atan2((event.pos[1] - new_ball.y), (event.pos[0] - new_ball.x))
-        new_ball.vx = self.f2_power * math.cos(self.an)
-        new_ball.vy = - self.f2_power * math.sin(self.an)
-        balls.append(new_ball)
-        self.f2_on = 0
-        self.f2_power = 10
 
     def move(self):
         self.x += self.speed * math.sin(-math.radians(self.angle))
@@ -124,8 +92,8 @@ class Asteroid:
         self.Rmin = 20
         self.Rmax = 50
         self.Vmin = 1
-        self.Vmax = 7
-        self.Wmax = 5
+        self.Vmax = 4
+        self.Wmax = 2
         self.screen = screen
         self.x = []
         self.y = []
@@ -208,6 +176,7 @@ def main():
     score = 1
     asteroid = Asteroid(screen)
     spaceship = SpaceShip(screen)
+    ball = Ball(screen)
     shrift = pygame.font.SysFont('Times New Roman', 30)
     ending_shrift = pygame.font.SysFont('Times New Roman', 100)
     delay = asteroid.delay
@@ -227,6 +196,9 @@ def main():
                     # asteroid.smash()
                     asteroid.new()
                     score += 10
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    ball.new(spaceship)
 
         asteroid.wall_check()
         asteroid.move_and_draw()
@@ -244,6 +216,8 @@ def main():
         if keys[pygame.K_UP]:
             spaceship.move()
         spaceship.draw()
+        # ball.wall_check()
+        ball.move_and_draw()
 
         text = shrift.render("Ваш счёт: " + str(score), True, (255, 255, 255))
         screen.blit(text, (1, 1))
