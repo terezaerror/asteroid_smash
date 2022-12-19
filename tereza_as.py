@@ -37,7 +37,13 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
+mixer.init()
+def load_sound(file):
+    sound = mixer.Sound(file)
+    return sound
 
+hit_sound = load_sound('hit.mp3')
+chewbacca = load_sound('Chewbacca roar.mp3')
 class Button:
     def __init__(self, image, pos, text_input, font, base_color, hovering_color):
         self.image = image
@@ -269,13 +275,13 @@ def hit_check(obj1, obj2):
             if (obj1.x[i] - obj2.x[j]) ** 2 + (obj1.y[i] - obj2.y[j]) ** 2 <= (obj1.r[i] + obj2.r[j]) ** 2:
                 obj1.delete(i)
                 obj2.delete(j)
+                hit_sound.play()
                 return True
     return False
 
 
 def main():
     pygame.init()
-    mixer.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.font.init()
     font1 = pygame.font.Font("font.ttf", 40)
@@ -290,7 +296,7 @@ def main():
     done = False
     while not done:
         mixer.music.load('open.mp3')
-        mixer.music.play()
+        mixer.music.play(-1)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
@@ -364,6 +370,7 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if play_button.check_for_input(menu_mouse_pos):
                     end = True
+                    chewbacca.play()
                 if quit_button.check_for_input(menu_mouse_pos):
                     pygame.quit()
                     sys.exit()
@@ -373,8 +380,6 @@ def main():
 
     asteroid.new()
     while not finished:
-        mixer.music.load('imperial.mp3')
-        mixer.music.play()
         clock.tick(FPS)
         screen.blit(background, background_rect)
 
