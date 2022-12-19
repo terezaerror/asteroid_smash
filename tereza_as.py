@@ -1,5 +1,7 @@
 import math
-import pygame, sys
+import pygame
+import sys
+from pygame.draw import *
 from random import randint
 from random import choice
 
@@ -11,7 +13,6 @@ data = open('table.txt', 'r')
 table_old = data.read()
 data.close()
 
-
 background = pygame.image.load('background_pixel.jpg')
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 background_rect = background.get_rect()
@@ -22,6 +23,7 @@ DEFAULT_IMAGE_SIZE = (100, 100)
 space_base = pygame.image.load('end.jpg')
 space_base = pygame.transform.scale(space_base, (WIDTH, HEIGHT))
 space_base_rect = space_base.get_rect()
+global txt_surface
 
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
@@ -29,124 +31,104 @@ YELLOW = (255, 255, 0)
 GREEN = (0, 255, 0)
 MAGENTA = (255, 0, 255)
 CYAN = (0, 255, 255)
+ORANGE = (255, 102, 0)
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
-class Button():
-	def __init__(self, image, pos, text_input, font, base_color, hovering_color):
-		self.image = image
-		self.x_pos = pos[0]
-		self.y_pos = pos[1]
-		self.font = font
-		self.base_color, self.hovering_color = base_color, hovering_color
-		self.text_input = text_input
-		self.text = self.font.render(self.text_input, True, self.base_color)
-		if self.image is None:
-			self.image = self.text
-		self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
-		self.text_rect = self.text.get_rect(center=(self.x_pos, self.y_pos))
 
-	def update(self, screen):
-		if self.image is not None:
-			screen.blit(self.image, self.rect)
-		screen.blit(self.text, self.text_rect)
+class Button:
+    def __init__(self, image, pos, text_input, font, base_color, hovering_color):
+        self.image = image
+        self.x_pos = pos[0]
+        self.y_pos = pos[1]
+        self.font = font
+        self.base_color, self.hovering_color = base_color, hovering_color
+        self.text_input = text_input
+        self.text = self.font.render(self.text_input, True, self.base_color)
+        if self.image is None:
+            self.image = self.text
+        self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
+        self.text_rect = self.text.get_rect(center=(self.x_pos, self.y_pos))
 
-	def checkForInput(self, position):
-		if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
-			return True
-		return False
+    def update(self, screen):
+        if self.image is not None:
+            screen.blit(self.image, self.rect)
+        screen.blit(self.text, self.text_rect)
 
-	def changeColor(self, position):
-		if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
-			self.text = self.font.render(self.text_input, True, self.hovering_color)
-		else:
-			self.text = self.font.render(self.text_input, True, self.base_color)
+    def check_for_input(self, position):
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top,
+                                                                                          self.rect.bottom):
+            return True
+        return False
+
+    def change_color(self, position):
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top,
+                                                                                          self.rect.bottom):
+            self.text = self.font.render(self.text_input, True, self.hovering_color)
+        else:
+            self.text = self.font.render(self.text_input, True, self.base_color)
 
 
 class Ball:
-    def __init__(self, screen: pygame.Surface, x=40, y=450):
-        """ Конструктор класса ball
-        Args:
-        x - начальное положение мяча по горизонтали
-        y - начальное положение мяча по вертикали
-        """
+    def __init__(self, screen):
         self.screen = screen
-        self.x = x
-        self.y = y
-        self.r = 10
-        self.vx = 0
-        self.vy = 0
-        self.color = COLORS[randint(0, 5)]
-        self.live = 45
+        self.n = 0
+        self.x = []
+        self.y = []
+        self.r = []
+        self.r0 = 5
+        self.angle = []
+        self.v0 = 20
+        self.color = WHITE
+        self.delay = 4
 
-    def move(self):
-        """Переместить мяч по прошествии единицы времени.
-        Метод описывает перемещение мяча за один кадр перерисовки. То есть, обновляет значения
-        self.x и self.y с учетом скоростей self.vx и self.vy, силы гравитации, действующей на мяч,
-        и стен по краям окна (размер окна 800х600).
-        """
+    def new(self, obj):
+        self.n += 1
+        self.x.append(obj.x)
+        self.y.append(obj.y)
+        self.r.append(self.r0)
+        self.angle.append(obj.angle)
 
-        g = 0.7
-        k = 0.02
-        self.x += self.vx
-        self.y -= self.vy
-        self.vx -= k * self.vx
-        if (self.y >= HEIGHT - self.r - 1) or (self.y <= 10):
-            self.vy = -self.vy
-        else:
-            self.vy -= g
-            self.vy -= k * self.vy
-        if (self.x >= WIDTH - self.r - 1) or (self.x <= 10):
-            self.vx = -self.vx
-        self.live -= 1
+    def move_and_draw(self):
+        for i in range(self.n):
+            self.x[i] += self.v0 * math.sin(-math.radians(self.angle[i]))
+            self.y[i] -= self.v0 * math.cos(math.radians(self.angle[i]))
+            circle(self.screen, self.color, (self.x[i], self.y[i]), self.r[i])
 
-    def draw(self):
-        pygame.draw.circle(
-            self.screen,
-            self.color,
-            (self.x, self.y),
-            self.r
-        )
+    def wall_check(self):
+        for i in range(self.n):
+            if self.y[i] >= HEIGHT + 100 or self.y[i] <= - 100 or self.x[i] >= WIDTH + 100 or self.x[i] <= - 100:
+                self.delete(i)
+                return True
+        return False
+
+    def delete(self, i):
+        self.x.pop(i)
+        self.y.pop(i)
+        self.r.pop(i)
+        self.angle.pop(i)
+        self.n -= 1
 
 
 class SpaceShip:
     def __init__(self, screen):
         self.screen = screen
         self.image = pygame.image.load('spaceship.png')
-        self.x = 200
-        self.y = 450
+        self.x = WIDTH / 2
+        self.y = HEIGHT / 2
         self.r = 30
         self.speed = 8
         self.angle = 0
-        self.maneuverability = 4
-        self.f2_power = 10
-        self.f2_on = 0
-        self.an = 1
-        self.color = CYAN
-        self.width = 5
-
-    def fire2_start(self, event):
-        self.f2_on = 1
-
-    def fire2_end(self, event):
-        """Выстрел мячом.
-        Происходит при отпускании кнопки мыши.
-        Начальные значения компонент скорости мяча vx и vy зависят от положения мыши.
-        """
-        global balls, bullet
-        bullet += 1
-        new_ball = Ball(self.screen, x=self.x, y=self.y)
-        new_ball.r += 5
-        self.an = math.atan2((event.pos[1] - new_ball.y), (event.pos[0] - new_ball.x))
-        new_ball.vx = self.f2_power * math.cos(self.an)
-        new_ball.vy = - self.f2_power * math.sin(self.an)
-        balls.append(new_ball)
-        self.f2_on = 0
-        self.f2_power = 10
+        self.maneuverability = 5
 
     def move(self):
         self.x += self.speed * math.sin(-math.radians(self.angle))
         self.y -= self.speed * math.cos(math.radians(self.angle))
+
+    def move_back(self):
+        self.x -= self.speed * math.sin(-math.radians(self.angle))
+        self.y += self.speed * math.cos(math.radians(self.angle))
 
     def rotate(self, clockwise=True):
         sign = 1 if clockwise else -1
@@ -165,9 +147,9 @@ class Asteroid:
         self.n = 0
         self.Rmin = 20
         self.Rmax = 50
-        self.Vmin = 1
-        self.Vmax = 7
-        self.Wmax = 5
+        self.Vmin = 2
+        self.Vmax = 3
+        self.Wmax = 2
         self.screen = screen
         self.x = []
         self.y = []
@@ -188,15 +170,7 @@ class Asteroid:
     def catch_check(self, event):
         for i in range(self.n):
             if (event.pos[0] - self.x[i]) ** 2 + (event.pos[1] - self.y[i]) ** 2 <= self.r[i] ** 2:
-                self.x.pop(i)
-                self.y.pop(i)
-                self.r.pop(i)
-                self.vx.pop(i)
-                self.vy.pop(i)
-                self.image.pop(i)
-                self.angle.pop(i)
-                self.w.pop(i)
-                self.n -= 1
+                self.delete(i)
                 return True
         return False
 
@@ -233,19 +207,72 @@ class Asteroid:
                     (self.vy[i] < 0 and 300 + self.y[i] <= self.r[i]):
                 self.vy[i] = -self.vy[i]
 
-    def hit_check(self, obj):
+    def crash_check(self, obj):
         for i in range(self.n):
             if (obj.x - self.x[i]) ** 2 + (obj.y - self.y[i]) ** 2 <= (obj.r + self.r[i]) ** 2:
                 return True
         return False
+
+    def delete(self, i):
+        self.x.pop(i)
+        self.y.pop(i)
+        self.r.pop(i)
+        self.vx.pop(i)
+        self.vy.pop(i)
+        self.image.pop(i)
+        self.angle.pop(i)
+        self.w.pop(i)
+        self.n -= 1
 
     '''def smash(self):
         self.screen.blit(pygame.transform.scale(self.image[i], (self.r[i] * 2, self.r[i] * 2)),
                          (self.x[i] - self.r[i], self.y[i] - self.r[i]))'''
 
 
+class Energy:
+    def __init__(self, screen):
+        self.screen = screen
+        self.x = 1
+        self.y = 1
+        self.length = 300
+        self.height = 25
+        self.fuel = 0
+        self.delay = False
+
+    def draw(self):
+        if self.fuel < self.length:
+            self.fuel += 1
+        if 0 < self.fuel <= self.length // 4:
+            rect(self.screen, RED, (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
+        elif self.length // 4 < self.fuel <= self.length // 2:
+            rect(self.screen, ORANGE, (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
+        elif self.length // 2 < self.fuel <= 3 * self.length // 4:
+            rect(self.screen, YELLOW, (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
+        elif 3 * self.length // 4 < self.fuel <= self.length:
+            rect(self.screen, GREEN, (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
+        if self.fuel == self.length:
+            self.delay = False
+
+    def charge(self):
+        if self.fuel > 0:
+            self.fuel -= 15
+            return True
+        else:
+            self.delay = True
+            return False
+
+
+def hit_check(obj1, obj2):
+    for i in range(obj1.n):
+        for j in range(obj2.n):
+            if (obj1.x[i] - obj2.x[j]) ** 2 + (obj1.y[i] - obj2.y[j]) ** 2 <= (obj1.r[i] + obj2.r[j]) ** 2:
+                obj1.delete(i)
+                obj2.delete(j)
+                return True
+    return False
+
+
 def main():
-    global txt_surface
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.font.init()
@@ -299,28 +326,31 @@ def main():
     score = 1
     asteroid = Asteroid(screen)
     spaceship = SpaceShip(screen)
+    ball = Ball(screen)
+    energy = Energy(screen)
     shrift = pygame.font.SysFont('Times New Roman', 30)
     ending_shrift = pygame.font.SysFont('Times New Roman', 100)
-    delay = asteroid.delay
+    delay1 = asteroid.delay
+    delay2 = ball.delay
     clock = pygame.time.Clock()
     finished = False
     asteroid.new()
     end = False
-    while (end == False):
+    while not end:
         screen.blit(main_menu, main_menu_rect)
         font = pygame.font.Font("font.ttf", 25)
         font_buttons = pygame.font.Font("font.ttf", 40)
-        nlabel = font.render(name + ", welcome to Millennium Falcon!", 1, (255,255,255))
+        nlabel = font.render(name + ", welcome to Millennium Falcon!", True, (255, 255, 255))
 
-        MENU_MOUSE_POS = pygame.mouse.get_pos()
+        menu_mouse_pos = pygame.mouse.get_pos()
 
-        PLAY_BUTTON = Button(image=None, pos=(325, 350),
-                             text_input="PLAY", font=font_buttons, base_color=(209,17,74), hovering_color="White")
-        QUIT_BUTTON = Button(image=None, pos=(975, 350),
-                             text_input="QUIT", font=font_buttons, base_color=(209,17,74), hovering_color="White")
+        play_button = Button(image=None, pos=(325, 350),
+                             text_input="PLAY", font=font_buttons, base_color=(209, 17, 74), hovering_color="White")
+        quit_button = Button(image=None, pos=(975, 350),
+                             text_input="QUIT", font=font_buttons, base_color=(209, 17, 74), hovering_color="White")
 
-        for button in [PLAY_BUTTON, QUIT_BUTTON]:
-            button.changeColor(MENU_MOUSE_POS)
+        for button in [play_button, quit_button]:
+            button.change_color(menu_mouse_pos)
             button.update(screen)
 
         for event in pygame.event.get():
@@ -328,36 +358,43 @@ def main():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
+                if play_button.check_for_input(menu_mouse_pos):
                     end = True
-                if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
+                if quit_button.check_for_input(menu_mouse_pos):
                     pygame.quit()
                     sys.exit()
 
         screen.blit(nlabel, (150, 110))
         pygame.display.update()
 
+    asteroid.new()
     while not finished:
         clock.tick(FPS)
         screen.blit(background, background_rect)
-        delay -= 1
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 finished = True
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if asteroid.catch_check(event):  # if a bullet gets into an asteroid
-                    # asteroid.smash()
-                    asteroid.new()
-                    score += 10
+            '''if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    ball.new(spaceship)'''
+
+        if hit_check(ball, asteroid):
+            # asteroid.smash()
+            asteroid.new()
+            score += 10
 
         asteroid.wall_check()
         asteroid.move_and_draw()
+        spaceship.draw()
+        ball.wall_check()
+        ball.move_and_draw()
 
-        if delay == 0:
+        delay1 -= 1
+        if delay1 == 0:
             score += 1
             asteroid.new()
-            delay = asteroid.delay
+            delay1 = asteroid.delay
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RIGHT]:
@@ -366,27 +403,36 @@ def main():
             spaceship.rotate(clockwise=True)
         if keys[pygame.K_UP]:
             spaceship.move()
-        spaceship.draw()
+        elif keys[pygame.K_DOWN]:
+            spaceship.move_back()
+        if keys[pygame.K_SPACE]:
+            delay2 -= 1
+            if delay2 <= 0 and not energy.delay:
+                score += 1
+                delay2 = ball.delay
+                ball.new(spaceship)
+                energy.charge()
+        energy.draw()
 
-        text = font.render("Ваш счёт: " + str(score), True, (255, 255, 255))
+        text = shrift.render("Score: " + str(score), True, (255, 255, 255))
         screen.blit(text, (1, 1))
         pygame.display.update()
         screen.fill(BLACK)
 
-        if asteroid.hit_check(spaceship):
-            text = font.render("Ваш счёт: " + str(score), True, (255, 255, 255))
-            text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-            ending_text = font.render("Game over", True, (209,17,74))
-            ending_text_rect = ending_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-            screen.blit(ending_text, ending_text_rect)
-            pygame.display.update()
-            clock.tick(1)
-            screen.fill(BLACK)
-            screen.blit(text, text_rect)
-            pygame.display.update()
-            clock.tick(1)
-            finished = True
-    #print("Ваш счёт: ", score,)
+        if asteroid.crash_check(spaceship):
+            while not finished:
+                text = font.render("Your score: " + str(score), True, WHITE)
+                text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+                ending_text = font.render("Game over", True, (209, 17, 74))
+                ending_text_rect = ending_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+                screen.blit(ending_text, ending_text_rect)
+                screen.blit(text, text_rect)
+                pygame.display.update()
+                screen.fill(BLACK)
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        finished = True
+
     table = open('table.txt', 'w')
     print(table_old, file=table)
     print(name, score, file=table)

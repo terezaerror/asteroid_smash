@@ -1,5 +1,6 @@
 import math
 import pygame
+import sys
 from pygame.draw import *
 from random import randint
 from random import choice
@@ -8,21 +9,65 @@ WIDTH = 1300
 HEIGHT = 700
 FPS = 60
 
-background = pygame.image.load('background-1.jpg')
+data = open('table.txt', 'r')
+table_old = data.read()
+data.close()
+
+background = pygame.image.load('background_pixel.jpg')
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 background_rect = background.get_rect()
+main_menu = pygame.image.load('start.jpg')
+main_menu = pygame.transform.scale(main_menu, (WIDTH, HEIGHT))
+main_menu_rect = main_menu.get_rect()
+DEFAULT_IMAGE_SIZE = (100, 100)
+space_base = pygame.image.load('end.jpg')
+space_base = pygame.transform.scale(space_base, (WIDTH, HEIGHT))
+space_base_rect = space_base.get_rect()
+global txt_surface
 
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
-ORANGE = (255, 102, 0)
 GREEN = (0, 255, 0)
 MAGENTA = (255, 0, 255)
 CYAN = (0, 255, 255)
+ORANGE = (255, 102, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-
 COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
+
+
+class Button:
+    def __init__(self, image, pos, text_input, font, base_color, hovering_color):
+        self.image = image
+        self.x_pos = pos[0]
+        self.y_pos = pos[1]
+        self.font = font
+        self.base_color, self.hovering_color = base_color, hovering_color
+        self.text_input = text_input
+        self.text = self.font.render(self.text_input, True, self.base_color)
+        if self.image is None:
+            self.image = self.text
+        self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
+        self.text_rect = self.text.get_rect(center=(self.x_pos, self.y_pos))
+
+    def update(self, screen):
+        if self.image is not None:
+            screen.blit(self.image, self.rect)
+        screen.blit(self.text, self.text_rect)
+
+    def check_for_input(self, position):
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top,
+                                                                                          self.rect.bottom):
+            return True
+        return False
+
+    def change_color(self, position):
+        if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top,
+                                                                                          self.rect.bottom):
+            self.text = self.font.render(self.text_input, True, self.hovering_color)
+        else:
+            self.text = self.font.render(self.text_input, True, self.base_color)
 
 
 class Ball:
@@ -178,6 +223,7 @@ class Asteroid:
         self.angle.pop(i)
         self.w.pop(i)
         self.n -= 1
+
     '''def smash(self):
         self.screen.blit(pygame.transform.scale(self.image[i], (self.r[i] * 2, self.r[i] * 2)),
                          (self.x[i] - self.r[i], self.y[i] - self.r[i]))'''
@@ -229,6 +275,54 @@ def hit_check(obj1, obj2):
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.font.init()
+    font1 = pygame.font.Font("font.ttf", 40)
+    text1 = font1.render('Введите имя игрока:', True, (255, 255, 255))
+    font = pygame.font.Font("font.ttf", 40)
+    input_box = pygame.Rect(10, 100, 200, 70)
+    color_inactive = pygame.Color('lightskyblue3')
+    color_active = pygame.Color('dodgerblue2')
+    color = color_inactive
+    active = False
+    text = ''
+    done = False
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                # If the user clicked on the input_box rect.
+                if input_box.collidepoint(event.pos):
+                    # Toggle the active variable.
+                    active = not active
+                else:
+                    active = False
+                # Change the current color of the input box.
+                color = color_active if active else color_inactive
+            if event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_RETURN:
+                        name = text
+                        print(text)
+                        text = ''
+                        done = True
+                    elif event.key == pygame.K_BACKSPACE:
+                        text = text[:-1]
+                    else:
+                        text += event.unicode
+        screen.fill((0, 0, 0))
+        # Render the current text.
+        txt_surface = font.render(text, True, color)
+        # Resize the box if the text is too long.
+        width = max(200, txt_surface.get_width() + 10)
+        input_box.w = width
+        # Blit the text.
+        screen.blit(text1, (10, 50))
+        screen.blit(txt_surface, (input_box.x + 10, input_box.y + 10))
+        # Blit the input_box rect.
+        pygame.draw.rect(screen, color, input_box, 2)
+        pygame.display.flip()
+
     score = 1
     asteroid = Asteroid(screen)
     spaceship = SpaceShip(screen)
@@ -240,6 +334,38 @@ def main():
     delay2 = ball.delay
     clock = pygame.time.Clock()
     finished = False
+    asteroid.new()
+    end = False
+    while not end:
+        screen.blit(main_menu, main_menu_rect)
+        font = pygame.font.Font("font.ttf", 25)
+        font_buttons = pygame.font.Font("font.ttf", 40)
+        nlabel = font.render(name + ", welcome to Millennium Falcon!", True, (255, 255, 255))
+
+        menu_mouse_pos = pygame.mouse.get_pos()
+
+        play_button = Button(image=None, pos=(325, 350),
+                             text_input="PLAY", font=font_buttons, base_color=(209, 17, 74), hovering_color="White")
+        quit_button = Button(image=None, pos=(975, 350),
+                             text_input="QUIT", font=font_buttons, base_color=(209, 17, 74), hovering_color="White")
+
+        for button in [play_button, quit_button]:
+            button.change_color(menu_mouse_pos)
+            button.update(screen)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if play_button.check_for_input(menu_mouse_pos):
+                    end = True
+                if quit_button.check_for_input(menu_mouse_pos):
+                    pygame.quit()
+                    sys.exit()
+
+        screen.blit(nlabel, (150, 110))
+        pygame.display.update()
 
     asteroid.new()
     while not finished:
@@ -295,10 +421,10 @@ def main():
 
         if asteroid.crash_check(spaceship):
             while not finished:
-                text = shrift.render("Ваш счёт: " + str(score), True, (255, 255, 255))
-                text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
-                ending_text = ending_shrift.render("Game over", True, (255, 0, 0))
-                ending_text_rect = ending_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+                text = font.render("Your score: " + str(score), True, WHITE)
+                text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+                ending_text = font.render("Game over", True, (209, 17, 74))
+                ending_text_rect = ending_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
                 screen.blit(ending_text, ending_text_rect)
                 screen.blit(text, text_rect)
                 pygame.display.update()
@@ -307,7 +433,31 @@ def main():
                     if event.type == pygame.QUIT:
                         finished = True
 
-    print("Ваш счёт: ", score)
+    table = open('table.txt', 'w')
+    print(table_old, file=table)
+    print(name, score, file=table)
+    table.close()
+
+    table = open('table.txt', 'r')
+    data = table.readlines()
+    data = [line.rstrip() for line in data]
+    table.close()
+
+    finished = False
+    screen.blit(space_base, space_base_rect)
+    text = []
+    for line in data:
+        text.append(font.render(line, True, (255, 255, 255)))
+    while not finished:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                finished = True
+        for i in range(len(text)):
+            screen.blit(text[i], (40, 30 + 25 * i))
+
+        pygame.display.update()
+
     pygame.init()
 
 
