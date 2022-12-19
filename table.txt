@@ -30,3 +30,21 @@ Stephan 216
 Stephan 369
 
 m 2
+
+k 2
+
+n 8
+
+kj 1
+
+j 2
+
+m 3
+
+j 1
+
+d 2
+
+d 1
+
+k 3

@@ -426,6 +426,8 @@ def main():
         screen.fill(BLACK)
 
         if asteroid.crash_check(spaceship):
+            mixer.music.load('Dont fail me again.mp3')
+            mixer.music.play()
             while not finished:
                 text = font.render("Your score: " + str(score), True, WHITE)
                 text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
@@ -449,16 +451,16 @@ def main():
     data = [line.rstrip() for line in data]
     table.close()
 
-    finished = False
+    complete = False
     screen.blit(space_base, space_base_rect)
     text = []
     for line in data:
         text.append(font.render(line, True, (255, 255, 255)))
-    while not finished:
+    while not complete:
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                finished = True
+                complete = True
         for i in range(len(text)):
             screen.blit(text[i], (40, 30 + 25 * i))
 
