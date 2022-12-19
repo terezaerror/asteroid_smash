@@ -284,12 +284,14 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.font.init()
-    font1 = pygame.font.Font("font.ttf", 40)
-    text1 = font1.render('Введите имя игрока:', True, (255, 255, 255))
+    font1 = pygame.font.Font("font.ttf", 35)
+    text1 = font1.render('Enter name:', True, (255,255,255))
+    text2 = font1.render('A long time ago in a galaxy far,', True, (14,246,255))
+    text3 = font1.render('far away. . .', True, (14,246,255))
     font = pygame.font.Font("font.ttf", 40)
-    input_box = pygame.Rect(10, 100, 200, 70)
-    color_inactive = pygame.Color('lightskyblue3')
-    color_active = pygame.Color('dodgerblue2')
+    input_box = pygame.Rect(450, 38, 200, 55)
+    color_inactive = pygame.Color((255,255,255))
+    color_active = pygame.Color((14,246,255))
     color = color_inactive
     active = False
     text = ''
@@ -327,7 +329,9 @@ def main():
         width = max(200, txt_surface.get_width() + 10)
         input_box.w = width
         # Blit the text.
-        screen.blit(text1, (10, 50))
+        screen.blit(text1, (30, 50))
+        screen.blit(text2, (80, 340))
+        screen.blit(text3, (80, 390))
         screen.blit(txt_surface, (input_box.x + 10, input_box.y + 10))
         # Blit the input_box rect.
         pygame.draw.rect(screen, color, input_box, 2)
@@ -370,7 +374,6 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if play_button.check_for_input(menu_mouse_pos):
                     end = True
-                    chewbacca.play()
                 if quit_button.check_for_input(menu_mouse_pos):
                     pygame.quit()
                     sys.exit()
@@ -378,10 +381,11 @@ def main():
         screen.blit(nlabel, (150, 110))
         pygame.display.update()
 
+
+
+
     asteroid.new()
     while not finished:
-        mixer.music.load('imperial.mp3')
-        mixer.music.play(-1)
         clock.tick(FPS)
         screen.blit(background, background_rect)
 
