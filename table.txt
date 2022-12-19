@@ -4,3 +4,11 @@ Name and Score:
 k 36
 
 m 237
+
+ 10
+
+ 116
+
+h 16
+
+k 64

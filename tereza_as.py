@@ -42,7 +42,7 @@ def load_sound(file):
     sound = mixer.Sound(file)
     return sound
 
-hit_sound = load_sound('hit.mp3')
+hit_sound = load_sound('laser.mp3')
 chewbacca = load_sound('Chewbacca roar.mp3')
 class Button:
     def __init__(self, image, pos, text_input, font, base_color, hovering_color):
@@ -91,6 +91,7 @@ class Ball:
         self.delay = 4
 
     def new(self, obj):
+        hit_sound.play()
         self.n += 1
         self.x.append(obj.x)
         self.y.append(obj.y)
@@ -275,7 +276,6 @@ def hit_check(obj1, obj2):
             if (obj1.x[i] - obj2.x[j]) ** 2 + (obj1.y[i] - obj2.y[j]) ** 2 <= (obj1.r[i] + obj2.r[j]) ** 2:
                 obj1.delete(i)
                 obj2.delete(j)
-                hit_sound.play()
                 return True
     return False
 
