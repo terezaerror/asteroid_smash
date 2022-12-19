@@ -368,7 +368,7 @@ def main():
             spaceship.move()
         spaceship.draw()
 
-        text = shrift.render("Ваш счёт: " + str(score), True, (255, 255, 255))
+        text = font.render("Ваш счёт: " + str(score), True, (255, 255, 255))
         screen.blit(text, (1, 1))
         pygame.display.update()
         screen.fill(BLACK)
