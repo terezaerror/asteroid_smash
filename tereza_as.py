@@ -7,13 +7,21 @@ WIDTH = 1300
 HEIGHT = 700
 FPS = 60
 
-background = pygame.image.load('background-1.jpg')
+data = open('table.txt', 'r')
+table_old = data.read()
+data.close()
+
+
+background = pygame.image.load('background_pixel.jpg')
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 background_rect = background.get_rect()
-main_menu = pygame.image.load('rocket_launch.jpg')
+main_menu = pygame.image.load('start.jpg')
 main_menu = pygame.transform.scale(main_menu, (WIDTH, HEIGHT))
 main_menu_rect = main_menu.get_rect()
 DEFAULT_IMAGE_SIZE = (100, 100)
+space_base = pygame.image.load('end.jpg')
+space_base = pygame.transform.scale(space_base, (WIDTH, HEIGHT))
+space_base_rect = space_base.get_rect()
 
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
@@ -300,16 +308,16 @@ def main():
     end = False
     while (end == False):
         screen.blit(main_menu, main_menu_rect)
-        font = pygame.font.Font("font.ttf", 40)
+        font = pygame.font.Font("font.ttf", 25)
         font_buttons = pygame.font.Font("font.ttf", 40)
-        nlabel = font.render("Welcome " + name + "!", 1, (255, 0, 0))
+        nlabel = font.render(name + ", welcome to Millennium Falcon!", 1, (255,255,255))
 
         MENU_MOUSE_POS = pygame.mouse.get_pos()
 
-        PLAY_BUTTON = Button(image=None, pos=(680, 350),
-                             text_input="PLAY", font=font_buttons, base_color=(255, 0, 0), hovering_color="White")
-        QUIT_BUTTON = Button(image=pygame.image.load("Play Rect.png"), pos=(680, 450),
-                             text_input="QUIT", font=font_buttons, base_color=(255, 0, 0), hovering_color="White")
+        PLAY_BUTTON = Button(image=pygame.image.load("Play Rect.png"), pos=(325, 350),
+                             text_input="PLAY", font=font_buttons, base_color=(209,17,74), hovering_color="White")
+        QUIT_BUTTON = Button(image=pygame.image.load("Play Rect.png"), pos=(975, 350),
+                             text_input="QUIT", font=font_buttons, base_color=(209,17,74), hovering_color="White")
 
         for button in [PLAY_BUTTON, QUIT_BUTTON]:
             button.changeColor(MENU_MOUSE_POS)
@@ -326,7 +334,7 @@ def main():
                     pygame.quit()
                     sys.exit()
 
-        screen.blit(nlabel, (170, 120))
+        screen.blit(nlabel, (150, 110))
         pygame.display.update()
 
     while not finished:
@@ -366,9 +374,9 @@ def main():
         screen.fill(BLACK)
 
         if asteroid.hit_check(spaceship):
-            text = shrift.render("Ваш счёт: " + str(score), True, (255, 255, 255))
+            text = font.render("Ваш счёт: " + str(score), True, (255, 255, 255))
             text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-            ending_text = ending_shrift.render("Game over", True, (255, 0, 0))
+            ending_text = font.render("Game over", True, (209,17,74))
             ending_text_rect = ending_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
             screen.blit(ending_text, ending_text_rect)
             pygame.display.update()
@@ -378,8 +386,32 @@ def main():
             pygame.display.update()
             clock.tick(1)
             finished = True
+    #print("Ваш счёт: ", score,)
+    table = open('table.txt', 'w')
+    print(table_old, file=table)
+    print(name, score, file=table)
+    table.close()
 
-    print("Ваш счёт: ", score)
+    table = open('table.txt', 'r')
+    data = table.readlines()
+    data = [line.rstrip() for line in data]
+    table.close()
+
+    finished = False
+    screen.blit(space_base, space_base_rect)
+    text = []
+    for line in data:
+        text.append(font.render(line, True, (255, 255, 255)))
+    while not finished:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                finished = True
+        for i in range(len(text)):
+            screen.blit(text[i], (40, 30 + 25 * i))
+
+        pygame.display.update()
+
     pygame.init()
 
 
