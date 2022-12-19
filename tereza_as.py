@@ -4,6 +4,7 @@ import sys
 from pygame.draw import *
 from random import randint
 from random import choice
+from pygame import mixer
 
 WIDTH = 1300
 HEIGHT = 700
@@ -274,6 +275,7 @@ def hit_check(obj1, obj2):
 
 def main():
     pygame.init()
+    mixer.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.font.init()
     font1 = pygame.font.Font("font.ttf", 40)
@@ -287,6 +289,8 @@ def main():
     text = ''
     done = False
     while not done:
+        mixer.music.load('open.mp3')
+        mixer.music.play()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
@@ -369,6 +373,8 @@ def main():
 
     asteroid.new()
     while not finished:
+        mixer.music.load('imperial.mp3')
+        mixer.music.play()
         clock.tick(FPS)
         screen.blit(background, background_rect)
 

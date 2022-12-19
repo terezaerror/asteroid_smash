@@ -7,6 +7,20 @@ Stephan 4
 
 s 2
 
+Tereza 3
+
+j 3
+
+gh 4
+
+gh 2
+
+f 7
+
+d 1
+
+p 2
+
 Stephan 144
 
 Stephan 154
@@ -14,3 +28,5 @@ Stephan 154
 Stephan 216
 
 Stephan 369
+
+m 2
