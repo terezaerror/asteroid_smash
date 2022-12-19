@@ -380,6 +380,8 @@ def main():
 
     asteroid.new()
     while not finished:
+        mixer.music.load('imperial.mp3')
+        mixer.music.play(-1)
         clock.tick(FPS)
         screen.blit(background, background_rect)
 
