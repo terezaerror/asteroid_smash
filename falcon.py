@@ -4,6 +4,7 @@ import sys
 from pygame.draw import *
 from random import randint
 from random import choice
+from pygame import mixer
 
 WIDTH = 1300
 HEIGHT = 700
@@ -36,7 +37,13 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
+mixer.init()
+def load_sound(file):
+    sound = mixer.Sound(file)
+    return sound
 
+hit_sound = load_sound('laser.mp3')
+chewbacca = load_sound('Chewbacca roar.mp3')
 class Button:
     def __init__(self, image, pos, text_input, font, base_color, hovering_color):
         self.image = image
@@ -84,6 +91,7 @@ class Ball:
         self.delay = 4
 
     def new(self, obj):
+        hit_sound.play()
         self.n += 1
         self.x.append(obj.x)
         self.y.append(obj.y)
@@ -276,17 +284,21 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.font.init()
-    font1 = pygame.font.Font("font.ttf", 40)
-    text1 = font1.render('Введите имя игрока:', True, (255, 255, 255))
+    font1 = pygame.font.Font("font.ttf", 35)
+    text1 = font1.render('Enter name:', True, (255,255,255))
+    text2 = font1.render('A long time ago in a galaxy far,', True, (14,246,255))
+    text3 = font1.render('far away. . .', True, (14,246,255))
     font = pygame.font.Font("font.ttf", 40)
-    input_box = pygame.Rect(10, 100, 200, 70)
-    color_inactive = pygame.Color('lightskyblue3')
-    color_active = pygame.Color('dodgerblue2')
+    input_box = pygame.Rect(450, 38, 200, 55)
+    color_inactive = pygame.Color((255,255,255))
+    color_active = pygame.Color((14,246,255))
     color = color_inactive
     active = False
     text = ''
     done = False
     while not done:
+        mixer.music.load('open.mp3')
+        mixer.music.play(-1)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
@@ -317,7 +329,9 @@ def main():
         width = max(200, txt_surface.get_width() + 10)
         input_box.w = width
         # Blit the text.
-        screen.blit(text1, (10, 50))
+        screen.blit(text1, (30, 50))
+        screen.blit(text2, (80, 340))
+        screen.blit(text3, (80, 390))
         screen.blit(txt_surface, (input_box.x + 10, input_box.y + 10))
         # Blit the input_box rect.
         pygame.draw.rect(screen, color, input_box, 2)
@@ -366,6 +380,9 @@ def main():
 
         screen.blit(nlabel, (150, 110))
         pygame.display.update()
+
+
+
 
     asteroid.new()
     while not finished:
@@ -420,6 +437,8 @@ def main():
         screen.fill(BLACK)
 
         if asteroid.crash_check(spaceship):
+            mixer.music.load('Dont fail me again.mp3')
+            mixer.music.play()
             while not finished:
                 text = font.render("Your score: " + str(score), True, WHITE)
                 text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
@@ -443,16 +462,16 @@ def main():
     data = [line.rstrip() for line in data]
     table.close()
 
-    finished = False
+    complete = False
     screen.blit(space_base, space_base_rect)
     text = []
     for line in data:
         text.append(font.render(line, True, (255, 255, 255)))
-    while not finished:
+    while not complete:
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                finished = True
+                complete = True
         for i in range(len(text)):
             screen.blit(text[i], (40, 30 + 25 * i))
 
@@ -463,6 +482,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
