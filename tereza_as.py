@@ -1,5 +1,5 @@
 import math
-import pygame
+import pygame, sys
 from random import randint
 from random import choice
 
@@ -13,6 +13,7 @@ background_rect = background.get_rect()
 main_menu = pygame.image.load('rocket_launch.jpg')
 main_menu = pygame.transform.scale(main_menu, (WIDTH, HEIGHT))
 main_menu_rect = main_menu.get_rect()
+DEFAULT_IMAGE_SIZE = (100, 100)
 
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
@@ -22,6 +23,36 @@ MAGENTA = (255, 0, 255)
 CYAN = (0, 255, 255)
 BLACK = (0, 0, 0)
 COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
+
+class Button():
+	def __init__(self, image, pos, text_input, font, base_color, hovering_color):
+		self.image = image
+		self.x_pos = pos[0]
+		self.y_pos = pos[1]
+		self.font = font
+		self.base_color, self.hovering_color = base_color, hovering_color
+		self.text_input = text_input
+		self.text = self.font.render(self.text_input, True, self.base_color)
+		if self.image is None:
+			self.image = self.text
+		self.rect = self.image.get_rect(center=(self.x_pos, self.y_pos))
+		self.text_rect = self.text.get_rect(center=(self.x_pos, self.y_pos))
+
+	def update(self, screen):
+		if self.image is not None:
+			screen.blit(self.image, self.rect)
+		screen.blit(self.text, self.text_rect)
+
+	def checkForInput(self, position):
+		if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
+			return True
+		return False
+
+	def changeColor(self, position):
+		if position[0] in range(self.rect.left, self.rect.right) and position[1] in range(self.rect.top, self.rect.bottom):
+			self.text = self.font.render(self.text_input, True, self.hovering_color)
+		else:
+			self.text = self.font.render(self.text_input, True, self.base_color)
 
 
 class Ball:
@@ -206,6 +237,7 @@ class Asteroid:
 
 
 def main():
+    global txt_surface
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.font.init()
@@ -269,12 +301,33 @@ def main():
     while (end == False):
         screen.blit(main_menu, main_menu_rect)
         font = pygame.font.Font("font.ttf", 40)
-        nlabel = font.render("Welcome " + text , 1, (255, 0, 0))
+        font_buttons = pygame.font.Font("font.ttf", 40)
+        nlabel = font.render("Welcome " + name + "!", 1, (255, 0, 0))
+
+        MENU_MOUSE_POS = pygame.mouse.get_pos()
+
+        PLAY_BUTTON = Button(image=None, pos=(680, 350),
+                             text_input="PLAY", font=font_buttons, base_color=(255, 0, 0), hovering_color="White")
+        QUIT_BUTTON = Button(image=pygame.image.load("Play Rect.png"), pos=(680, 450),
+                             text_input="QUIT", font=font_buttons, base_color=(255, 0, 0), hovering_color="White")
+
+        for button in [PLAY_BUTTON, QUIT_BUTTON]:
+            button.changeColor(MENU_MOUSE_POS)
+            button.update(screen)
+
         for event in pygame.event.get():
-           if event.type == pygame.MOUSEBUTTONDOWN:
-               end = True
-        screen.blit(nlabel, (200, 200))
-        pygame.display.flip()
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    end = True
+                if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    pygame.quit()
+                    sys.exit()
+
+        screen.blit(nlabel, (170, 120))
+        pygame.display.update()
 
     while not finished:
         clock.tick(FPS)
