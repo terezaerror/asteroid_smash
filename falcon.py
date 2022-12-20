@@ -8,7 +8,7 @@ from pygame import mixer
 
 WIDTH = 1300
 HEIGHT = 700
-FPS = 60
+FPS = 80
 
 data = open('table.txt', 'r')
 table_old = data.read()
@@ -35,7 +35,6 @@ def load_sound(file):
 hit_sound = load_sound('Sounds&Images/laser.mp3')
 chewbacca = load_sound('Sounds&Images/Chewbacca roar.mp3')
 explosion_sound = load_sound('Sounds&Images/boom1.wav')
-
 
 
 class Button:
@@ -172,7 +171,7 @@ class Asteroid:
         self.image_2 = pygame.image.load('Sounds&Images/asteroid-2.png')
         # self.smash_image = ...
         self.choices = [self.image_1, self.image_2]
-        self.delay = 200
+        self.delay = 70
 
     def catch_check(self, event):
         for i in range(self.n):
