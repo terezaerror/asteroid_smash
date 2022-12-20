@@ -14,6 +14,7 @@ data = open('table.txt', 'r')
 table_old = data.read()
 data.close()
 mixer.init()
+global name
 
 background = pygame.image.load('Sounds&Images/background_pixel.jpg')
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
@@ -299,6 +300,7 @@ def hit_check(obj1, obj2):
 
 
 def main():
+    global name
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.font.init()
@@ -489,15 +491,15 @@ def main():
     table.close()
 
     table = open('table.txt', 'r')
-    data = table.readlines()
-    data = [line.rstrip() for line in data]
+    a_data = table.readlines()
+    a_data = [a_line.rstrip() for a_line in a_data]
     table.close()
 
     complete = False
     screen.blit(space_base, space_base_rect)
     text = []
-    for line in data:
-        text.append(font.render(line, True, (255, 255, 255)))
+    for a_line in a_data:
+        text.append(font.render(a_line, True, (255, 255, 255)))
     while not complete:
         clock.tick(FPS)
         for event in pygame.event.get():
