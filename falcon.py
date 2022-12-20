@@ -34,6 +34,8 @@ def load_sound(file):
 
 hit_sound = load_sound('Sounds&Images/laser.mp3')
 chewbacca = load_sound('Sounds&Images/Chewbacca roar.mp3')
+explosion_sound = load_sound('Sounds&Images/boom1.wav')
+
 
 
 class Button:
@@ -460,6 +462,7 @@ def main():
             hit_delay -= 1
 
         if asteroid.crash_check(spaceship) or spaceship.is_outside():
+            explosion_sound.play()
             # !!! hit sound !!!
             heal_delay = health.heal_delay
             if health.fuel > 0 and hit_delay == 0:
