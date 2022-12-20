@@ -1,2 +1,10 @@
 Name and Score:
 
+
+s 1
+
+d 1
+
+w 13
+
+a 35
