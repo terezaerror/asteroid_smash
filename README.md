@@ -18,4 +18,5 @@
 В случае проигрыша, игрок переходит на конечное меню, где видит свой результат и результат предыдущих игроков.
 
 https://realpython.com/asteroids-game-python/
+
 https://github.com/baraltech/Menu-System-PyGame
