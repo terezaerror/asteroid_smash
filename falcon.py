@@ -13,37 +13,29 @@ FPS = 60
 data = open('table.txt', 'r')
 table_old = data.read()
 data.close()
+mixer.init()
 
-background = pygame.image.load('background_pixel.jpg')
+background = pygame.image.load('Sounds&Images/background_pixel.jpg')
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 background_rect = background.get_rect()
-main_menu = pygame.image.load('start.jpg')
+main_menu = pygame.image.load('Sounds&Images/start.jpg')
 main_menu = pygame.transform.scale(main_menu, (WIDTH, HEIGHT))
 main_menu_rect = main_menu.get_rect()
 DEFAULT_IMAGE_SIZE = (100, 100)
-space_base = pygame.image.load('end.jpg')
+space_base = pygame.image.load('Sounds&Images/end.jpg')
 space_base = pygame.transform.scale(space_base, (WIDTH, HEIGHT))
 space_base_rect = space_base.get_rect()
-global txt_surface
 
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
-GREEN = (0, 255, 0)
-MAGENTA = (255, 0, 255)
-CYAN = (0, 255, 255)
-ORANGE = (255, 102, 0)
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
-mixer.init()
 def load_sound(file):
     sound = mixer.Sound(file)
     return sound
 
-hit_sound = load_sound('laser.mp3')
-chewbacca = load_sound('Chewbacca roar.mp3')
+
+hit_sound = load_sound('Sounds&Images/laser.mp3')
+chewbacca = load_sound('Sounds&Images/Chewbacca roar.mp3')
+
+
 class Button:
     def __init__(self, image, pos, text_input, font, base_color, hovering_color):
         self.image = image
@@ -87,7 +79,7 @@ class Ball:
         self.r0 = 5
         self.angle = []
         self.v0 = 20
-        self.color = WHITE
+        self.color = (255, 255, 255)
         self.delay = 4
 
     def new(self, obj):
@@ -122,7 +114,7 @@ class Ball:
 class SpaceShip:
     def __init__(self, screen):
         self.screen = screen
-        self.image = pygame.image.load('spaceship.png')
+        self.image = pygame.image.load('Sounds&Images/spaceship.png')
         self.x = WIDTH / 2
         self.y = HEIGHT / 2
         self.r = 30
@@ -149,12 +141,18 @@ class SpaceShip:
                 self.image, (self.r * 2, self.r * 2)),
                 self.angle).get_rect(center=(self.x, self.y)))
 
+    def is_outside(self):
+        if self.x < - 10 or self.x > WIDTH + 10 or self.y < - 10 or self.y > HEIGHT + 10:
+            return True
+        return False
+
 
 class Asteroid:
     def __init__(self, screen):
         self.n = 0
-        self.Rmin = 20
-        self.Rmax = 50
+        self.R1 = 20
+        self.R2 = 35
+        self.R3 = 50
         self.Vmin = 2
         self.Vmax = 3
         self.Wmax = 2
@@ -168,9 +166,8 @@ class Asteroid:
         self.angle = []
         self.w = []
         self.rect = []
-        self.image_1 = pygame.image.load('asteroid-1.png')
-        self.image_2 = pygame.image.load('asteroid-2.png')
-        # self.image_3 = ...
+        self.image_1 = pygame.image.load('Sounds&Images/asteroid-1.png')
+        self.image_2 = pygame.image.load('Sounds&Images/asteroid-2.png')
         # self.smash_image = ...
         self.choices = [self.image_1, self.image_2]
         self.delay = 200
@@ -184,11 +181,9 @@ class Asteroid:
 
     def new(self):
         self.n += 1
-        self.x.append(randint(*choice([(WIDTH + self.Rmax, WIDTH + 100 + self.Rmax),
-                                       (-self.Rmax - 100, -self.Rmax)])))
-        self.y.append(randint(*choice([(HEIGHT + self.Rmax, HEIGHT + 100 + self.Rmax),
-                                       (-self.Rmax - 100, -self.Rmax)])))
-        self.r.append(randint(self.Rmin, self.Rmax))
+        self.x.append(randint(*choice([(WIDTH + 100, WIDTH + 200), (- 200, - 100)])))
+        self.y.append(randint(*choice([(HEIGHT + 100, HEIGHT + 200), (- 200, - 100)])))
+        self.r.append(choice([self.R1, self.R2, self.R3]))
         self.vx.append(randint(*choice([(-self.Vmax, -self.Vmin), (self.Vmin, self.Vmax)])))
         self.vy.append(randint(*choice([(-self.Vmax, -self.Vmin), (self.Vmin, self.Vmax)])))
         self.image.append(choice(self.choices))
@@ -237,28 +232,24 @@ class Asteroid:
                          (self.x[i] - self.r[i], self.y[i] - self.r[i]))'''
 
 
-class Energy:
+class Power:
     def __init__(self, screen):
         self.screen = screen
         self.x = 1
-        self.y = 1
+        self.y = 27
         self.length = 300
-        self.height = 25
+        self.height = 17
         self.fuel = 0
         self.delay = False
+        self.color = (240, 0, 0)
 
     def draw(self):
         if self.fuel < self.length:
             self.fuel += 1
-        if 0 < self.fuel <= self.length // 4:
-            rect(self.screen, RED, (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
-        elif self.length // 4 < self.fuel <= self.length // 2:
-            rect(self.screen, ORANGE, (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
-        elif self.length // 2 < self.fuel <= 3 * self.length // 4:
-            rect(self.screen, YELLOW, (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
-        elif 3 * self.length // 4 < self.fuel <= self.length:
-            rect(self.screen, GREEN, (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
+        if 0 < self.fuel <= self.length:
+            rect(self.screen, self.color, (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
         if self.fuel == self.length:
+            self.color = (240, 0, 0)
             self.delay = False
 
     def charge(self):
@@ -267,7 +258,33 @@ class Energy:
             return True
         else:
             self.delay = True
+            self.color = (132, 0, 0)
             return False
+
+
+class Health:
+    def __init__(self, screen):
+        self.screen = screen
+        self.x = 1
+        self.y = 1
+        self.length = 300
+        self.height = 25
+        self.fuel = 300
+        self.heal = 60
+        self.heal_delay = 400
+        self.hit_delay = 30
+
+    def draw(self):
+        if 0 < self.fuel <= self.length // 5:
+            rect(self.screen, (200, 0, 0), (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
+        elif self.length // 5 < self.fuel <= 2 * self.length // 5:
+            rect(self.screen, (255, 100, 0), (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
+        elif 2 * self.length // 5 < self.fuel <= 3 * self.length // 5:
+            rect(self.screen, (220, 200, 0), (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
+        elif 3 * self.length // 5 < self.fuel <= 4 * self.length // 5:
+            rect(self.screen, (150, 200, 0), (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
+        elif 4 * self.length // 5 < self.fuel <= self.length:
+            rect(self.screen, (0, 230, 0), (WIDTH - self.x - self.fuel, self.y, self.fuel, self.height))
 
 
 def hit_check(obj1, obj2):
@@ -285,19 +302,19 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.font.init()
     font1 = pygame.font.Font("font.ttf", 35)
-    text1 = font1.render('Enter name:', True, (255,255,255))
-    text2 = font1.render('A long time ago in a galaxy far,', True, (14,246,255))
-    text3 = font1.render('far away. . .', True, (14,246,255))
+    text1 = font1.render('Enter name:', True, (255, 255, 255))
+    text2 = font1.render('A long time ago in a galaxy far,', True, (14, 246, 255))
+    text3 = font1.render('far away. . .', True, (14, 246, 255))
     font = pygame.font.Font("font.ttf", 40)
     input_box = pygame.Rect(450, 38, 200, 55)
-    color_inactive = pygame.Color((255,255,255))
-    color_active = pygame.Color((14,246,255))
+    color_inactive = pygame.Color((255, 255, 255))
+    color_active = pygame.Color((14, 246, 255))
     color = color_inactive
     active = False
     text = ''
     done = False
     while not done:
-        mixer.music.load('open.mp3')
+        mixer.music.load('Sounds&Images/open.mp3')
         mixer.music.play(-1)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -309,7 +326,6 @@ def main():
                     active = not active
                 else:
                     active = False
-                # Change the current color of the input box.
                 color = color_active if active else color_inactive
             if event.type == pygame.KEYDOWN:
                 if active:
@@ -324,37 +340,23 @@ def main():
                         text += event.unicode
         screen.fill((0, 0, 0))
         # Render the current text.
-        txt_surface = font.render(text, True, color)
+        text_surface = font.render(text, True, color)
         # Resize the box if the text is too long.
-        width = max(200, txt_surface.get_width() + 10)
+        width = max(200, text_surface.get_width() + 10)
         input_box.w = width
-        # Blit the text.
         screen.blit(text1, (30, 50))
         screen.blit(text2, (80, 340))
         screen.blit(text3, (80, 390))
-        screen.blit(txt_surface, (input_box.x + 10, input_box.y + 10))
-        # Blit the input_box rect.
+        screen.blit(text_surface, (input_box.x + 10, input_box.y + 10))
         pygame.draw.rect(screen, color, input_box, 2)
         pygame.display.flip()
 
-    score = 1
-    asteroid = Asteroid(screen)
-    spaceship = SpaceShip(screen)
-    ball = Ball(screen)
-    energy = Energy(screen)
-    shrift = pygame.font.SysFont('Times New Roman', 30)
-    ending_shrift = pygame.font.SysFont('Times New Roman', 100)
-    delay1 = asteroid.delay
-    delay2 = ball.delay
-    clock = pygame.time.Clock()
-    finished = False
-    asteroid.new()
     end = False
     while not end:
         screen.blit(main_menu, main_menu_rect)
         font = pygame.font.Font("font.ttf", 25)
         font_buttons = pygame.font.Font("font.ttf", 40)
-        nlabel = font.render(name + ", welcome to Millennium Falcon!", True, (255, 255, 255))
+        label = font.render(name + ", welcome to Millennium Falcon!", True, (255, 255, 255))
 
         menu_mouse_pos = pygame.mouse.get_pos()
 
@@ -378,12 +380,21 @@ def main():
                     pygame.quit()
                     sys.exit()
 
-        screen.blit(nlabel, (150, 110))
+        screen.blit(label, (150, 110))
         pygame.display.update()
 
-
-
-
+    score = 1
+    asteroid = Asteroid(screen)
+    spaceship = SpaceShip(screen)
+    ball = Ball(screen)
+    power = Power(screen)
+    health = Health(screen)
+    asteroid_delay = asteroid.delay
+    ball_delay = ball.delay
+    heal_delay = health.heal_delay
+    hit_delay = health.hit_delay
+    clock = pygame.time.Clock()
+    finished = False
     asteroid.new()
     while not finished:
         clock.tick(FPS)
@@ -392,9 +403,6 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 finished = True
-            '''if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    ball.new(spaceship)'''
 
         if hit_check(ball, asteroid):
             # asteroid.smash()
@@ -406,12 +414,14 @@ def main():
         spaceship.draw()
         ball.wall_check()
         ball.move_and_draw()
+        power.draw()
+        health.draw()
 
-        delay1 -= 1
-        if delay1 == 0:
+        asteroid_delay -= 1
+        if asteroid_delay == 0:
             score += 1
             asteroid.new()
-            delay1 = asteroid.delay
+            asteroid_delay = asteroid.delay
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RIGHT]:
@@ -423,34 +433,51 @@ def main():
         elif keys[pygame.K_DOWN]:
             spaceship.move_back()
         if keys[pygame.K_SPACE]:
-            delay2 -= 1
-            if delay2 <= 0 and not energy.delay:
-                score += 1
-                delay2 = ball.delay
+            ball_delay -= 1
+            if ball_delay <= 0 and not power.delay:
+                ball_delay = ball.delay
                 ball.new(spaceship)
-                energy.charge()
-        energy.draw()
+                power.charge()
 
-        text = shrift.render("Score: " + str(score), True, (255, 255, 255))
-        screen.blit(text, (1, 1))
+        score_text = pygame.font.Font("font.ttf", 20).render("Score: " + str(score), True, (255, 255, 255))
+        screen.blit(score_text, (1, 1))
+        power_text = pygame.font.Font("font.ttf", 13).render("Power", True, (255, 255, 255))
+        screen.blit(power_text, (WIDTH - 290, 30))
+        health_text = pygame.font.Font("font.ttf", 20).render("Health", True, (255, 255, 255))
+        screen.blit(health_text, (WIDTH - 290, 4))
         pygame.display.update()
-        screen.fill(BLACK)
+        screen.fill((0, 0, 0))
 
-        if asteroid.crash_check(spaceship):
-            mixer.music.load('Dont fail me again.mp3')
-            mixer.music.play()
-            while not finished:
-                text = font.render("Your score: " + str(score), True, WHITE)
-                text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-                ending_text = font.render("Game over", True, (209, 17, 74))
-                ending_text_rect = ending_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
-                screen.blit(ending_text, ending_text_rect)
-                screen.blit(text, text_rect)
-                pygame.display.update()
-                screen.fill(BLACK)
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        finished = True
+        if 0 < health.fuel < health.length:
+            if heal_delay == 0:
+                health.fuel += health.heal
+                heal_delay = health.heal_delay
+            else:
+                heal_delay -= 1
+        if hit_delay:
+            hit_delay -= 1
+
+        if asteroid.crash_check(spaceship) or spaceship.is_outside():
+            # !!! hit sound !!!
+            heal_delay = health.heal_delay
+            if health.fuel > 0 and hit_delay == 0:
+                health.fuel -= health.heal
+                hit_delay = health.hit_delay
+            if health.fuel <= 0:
+                mixer.music.load('Sounds&Images/Dont fail me again.mp3')
+                mixer.music.play()
+                while not finished:
+                    text1 = pygame.font.Font("font.ttf", 20).render("Your score: " + str(score), True, (255, 255, 255))
+                    text1_rect = text1.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+                    text2 = pygame.font.Font("font.ttf", 30).render("Game over", True, (209, 17, 74))
+                    text2_rect = text2.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+                    screen.blit(text1, text1_rect)
+                    screen.blit(text2, text2_rect)
+                    pygame.display.update()
+                    screen.fill((0, 0, 0))
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            finished = True
 
     table = open('table.txt', 'w')
     print(table_old, file=table)
